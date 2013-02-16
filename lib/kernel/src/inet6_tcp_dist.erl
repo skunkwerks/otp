@@ -39,7 +39,19 @@ select(Node) ->
 %% ------------------------------------------------------------
 
 listen(Name) ->
-    inet_tcp_dist:gen_listen(inet6_tcp, Name).
+    case inet6_tcp:listen(0, [{active, false}, {packet,2}]) of
+        {ok, Socket} ->
+            TcpAddress = get_tcp_address(Socket),
+            {_,Port} = TcpAddress#net_address.address,
+            case erl_epmd:register_node(Name, Port, inet6) of
+                {ok, Creation} ->
+                    {ok, {Socket, TcpAddress, Creation}};
+                Error ->
+                    Error
+            end;
+        Error ->
+            Error
+    end.
 
 %% ------------------------------------------------------------
 %% Accepts new connection attempts from other Erlang nodes.
@@ -69,6 +81,6 @@ setup(Node, Type, MyNode, LongOrShortNames,SetupTime) ->
 %%
 close(Socket) ->
     inet6_tcp:close(Socket).
-    
+
 is_node_name(Node) when is_atom(Node) ->
     inet_tcp_dist:is_node_name(Node).
