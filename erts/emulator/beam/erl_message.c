@@ -364,9 +364,9 @@ erts_queue_dist_message(Process *rcvr,
                     tok_lastcnt = signed_val(SEQ_TRACE_T_LASTCNT(token));
                     tok_serial = signed_val(SEQ_TRACE_T_SERIAL(token));
                 }
-                DTRACE6(message_queued,
+                DTRACE7(message_queued,
                         receiver_name, size_object(msg), rcvr->msg.len,
-                        tok_label, tok_lastcnt, tok_serial);
+                        tok_label, tok_lastcnt, tok_serial, dtrace_ts());
             }
 #endif
 	    erts_queue_message(rcvr, rcvr_locks, mbuf, msg, token
@@ -405,8 +405,8 @@ erts_queue_dist_message(Process *rcvr,
              * TODO: We don't know the real size of the external message here.
              *       -1 will appear to a D script as 4294967295.
              */
-            DTRACE6(message_queued, receiver_name, -1, rcvr->msg.len + 1,
-                    tok_label, tok_lastcnt, tok_serial);
+            DTRACE7(message_queued, receiver_name, -1, rcvr->msg.len + 1,
+                    tok_label, tok_lastcnt, tok_serial, dtrace_ts());
         }
 #endif
 	mp->data.dist_ext = dist_ext;
@@ -536,9 +536,9 @@ queue_message(Process *c_p,
             tok_lastcnt = signed_val(SEQ_TRACE_T_LASTCNT(seq_trace_token));
             tok_serial = signed_val(SEQ_TRACE_T_SERIAL(seq_trace_token));
         }
-        DTRACE6(message_queued,
+        DTRACE7(message_queued,
                 receiver_name, size_object(message), receiver->msg.len,
-                tok_label, tok_lastcnt, tok_serial);
+                tok_label, tok_lastcnt, tok_serial, dtrace_ts());
     }
 #endif
 
@@ -1037,6 +1037,16 @@ erts_send_message(Process* sender,
 	    LINK_MESSAGE_PRIVQ(receiver, mp);
 
 	    res = receiver->msg.len;
+
+#ifdef USE_VM_PROBES
+            if (DTRACE_ENABLED(message_queued)) {
+               DTRACE_CHARBUF(receiver_name, DTRACE_TERM_BUF_SIZE);
+               dtrace_proc_str(receiver, receiver_name);
+               DTRACE7(message_queued,
+                       receiver_name, size_object(message), receiver->msg.len,
+                       tok_label, tok_lastcnt, tok_serial, dtrace_ts());
+    }
+#endif
 
 	    if (IS_TRACED_FL(receiver, F_TRACE_RECEIVE)) {
 		trace_receive(receiver, message);
