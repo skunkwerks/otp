@@ -978,8 +978,8 @@ erts_send_message(Process* sender,
 		tok_lastcnt = signed_val(SEQ_TRACE_T_LASTCNT(stoken));
 		tok_serial = signed_val(SEQ_TRACE_T_SERIAL(stoken));
 	    }
-	    DTRACE6(message_send, sender_name, receiver_name,
-		    msize, tok_label, tok_lastcnt, tok_serial);
+	    DTRACE7(message_send, sender_name, receiver_name,
+		    msize, tok_label, tok_lastcnt, tok_serial, dtrace_ts());
         }
 #endif
         res = queue_message(NULL,
@@ -1015,8 +1015,9 @@ erts_send_message(Process* sender,
 	{
 	    ErlMessage* mp = message_alloc();
 
-            DTRACE6(message_send, sender_name, receiver_name,
-                    size_object(message), tok_label, tok_lastcnt, tok_serial);
+            DTRACE7(message_send, sender_name, receiver_name,
+                    size_object(message), tok_label, tok_lastcnt, tok_serial,
+                    dtrace_ts());
 	    mp->data.attached = NULL;
 	    ERL_MESSAGE_TERM(mp) = message;
 	    ERL_MESSAGE_TOKEN(mp) = NIL;
@@ -1071,8 +1072,8 @@ erts_send_message(Process* sender,
 	message = copy_struct(message, msize, &hp, ohp);
 	BM_MESSAGE_COPIED(msz);
 	BM_SWAP_TIMER(copy,send);
-        DTRACE6(message_send, sender_name, receiver_name,
-                msize, tok_label, tok_lastcnt, tok_serial);
+        DTRACE7(message_send, sender_name, receiver_name,
+                msize, tok_label, tok_lastcnt, tok_serial, dtrace_ts());
 	res = queue_message(sender,
 			    receiver,
 			    receiver_locks,
