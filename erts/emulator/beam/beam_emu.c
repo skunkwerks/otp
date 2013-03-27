@@ -1022,7 +1022,8 @@ init_emulator(void)
         int depth = STACK_START(p) - STACK_TOP(p);			\
         dtrace_fun_decode(p, m, f, a,					\
                           process_name, mfa);				\
-        DTRACE3(local_function_entry, process_name, mfa, depth);	\
+        DTRACE4(local_function_entry, process_name, mfa, depth,         \
+                dtrace_ts());	                                        \
     }
 
 #define DTRACE_GLOBAL_CALL(p, m, f, a)					\
@@ -1032,7 +1033,8 @@ init_emulator(void)
         int depth = STACK_START(p) - STACK_TOP(p);			\
         dtrace_fun_decode(p, m, f, a,					\
                           process_name, mfa);				\
-        DTRACE3(global_function_entry, process_name, mfa, depth);	\
+        DTRACE4(global_function_entry, process_name, mfa, depth,        \
+                dtrace_ts());	                                        \
     }
 
 #define DTRACE_RETURN(p, m, f, a)                               \
@@ -1051,7 +1053,7 @@ init_emulator(void)
         DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);              \
         dtrace_fun_decode(p, m, f, a,                           \
                           process_name, mfa);                   \
-        DTRACE2(bif_entry, process_name, mfa);                  \
+        DTRACE3(bif_entry, process_name, mfa, dtrace_ts());     \
     }
 
 #define DTRACE_BIF_RETURN(p, m, f, a)                           \
@@ -1069,7 +1071,7 @@ init_emulator(void)
         DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);              \
         dtrace_fun_decode(p, m, f, a,                           \
                           process_name, mfa);                   \
-        DTRACE2(nif_entry, process_name, mfa);                  \
+        DTRACE3(nif_entry, process_name, mfa, dtrace_ts());     \
     }
 
 #define DTRACE_NIF_RETURN(p, m, f, a)                           \
@@ -1546,8 +1548,8 @@ void process_main(void)
      */
 #ifdef USE_VM_CALL_PROBES
     if (DTRACE_ENABLED(global_function_entry)) {
-	BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
-	DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
+        BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
+        DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
     }
 #endif
     Dispatchx();
@@ -1561,8 +1563,8 @@ void process_main(void)
     SET_CP(c_p, I+2);
 #ifdef USE_VM_CALL_PROBES
     if (DTRACE_ENABLED(global_function_entry)) {
-	BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
-	DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
+        BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
+        DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
     }
 #endif
     Dispatchx();
@@ -1574,8 +1576,8 @@ void process_main(void)
  OpCase(i_call_ext_only_e):
 #ifdef USE_VM_CALL_PROBES
     if (DTRACE_ENABLED(global_function_entry)) {
-	BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
-	DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
+        BeamInstr* fp = (BeamInstr *) (((Export *) Arg(0))->addressv[erts_active_code_ix()]);
+        DTRACE_GLOBAL_CALL(c_p, (Eterm)fp[-3], (Eterm)fp[-2], fp[-1]);
     }
 #endif
     Dispatchx();
@@ -6062,7 +6064,7 @@ apply(Process* p, Eterm module, Eterm function, Eterm args, Eterm* reg)
 #ifdef USE_VM_CALL_PROBES
     if (DTRACE_ENABLED(global_function_entry)) {
         BeamInstr *fptr = (BeamInstr *) ep->addressv[erts_active_code_ix()];
-	DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
+        DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
     }
 #endif
     return ep->addressv[erts_active_code_ix()];
@@ -6117,7 +6119,7 @@ fixed_apply(Process* p, Eterm* reg, Uint arity)
 #ifdef USE_VM_CALL_PROBES
     if (DTRACE_ENABLED(global_function_entry)) {
         BeamInstr *fptr = (BeamInstr *)  ep->addressv[erts_active_code_ix()];
-	DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
+        DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
     }
 #endif
     return ep->addressv[erts_active_code_ix()];
