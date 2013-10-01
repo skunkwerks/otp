@@ -1060,6 +1060,16 @@ finalize_exec(Port *pp, ErtsPortTask **execq, int processing_busy_q)
 	}
     }
 
+#ifdef USE_VM_PROBES
+    if (DTRACE_ENABLED(port_inactive)) {
+        if (!(act & (ERTS_PTS_FLG_EXEC_IMM|ERTS_PTS_FLG_HAVE_TASKS))) {
+            DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
+            dtrace_port_str(pp, portid);
+            DTRACE2(port_inactive, portid, dtrace_ts());
+        }
+    }
+#endif
+
     return (act & ERTS_PTS_FLG_HAVE_TASKS) != 0;
 }
 
@@ -1547,6 +1557,16 @@ erts_port_task_schedule(Eterm id,
 #endif
 
     enqueue_port(runq, pp);
+
+#ifdef USE_VM_PROBES
+    if (DTRACE_ENABLED(port_active)) {
+        if (!(act & ERTS_PTS_FLG_EXEC_IMM)) {
+            DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
+            dtrace_port_str(pp, portid);
+            DTRACE2(port_active, portid, dtrace_ts());
+        }
+    }
+#endif
 
     erts_smp_runq_unlock(runq);
 
