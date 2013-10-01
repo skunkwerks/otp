@@ -2343,6 +2343,11 @@ sched_waiting_sys(Uint no, ErtsRunQueue *rq)
     rq->woken = 0;
     if (erts_system_profile_flags.scheduler)
 	profile_scheduler(make_small(no), am_inactive);
+#ifdef USE_VM_PROBES
+    if(DTRACE_ENABLED(scheduler_inactive)) {
+        DTRACE2(scheduler_inactive, no, dtrace_ts());
+    }
+#endif
 }
 
 static ERTS_INLINE void
@@ -2357,6 +2362,11 @@ sched_active_sys(Uint no, ErtsRunQueue *rq)
     rq->waiting--;
     if (erts_system_profile_flags.scheduler)
 	profile_scheduler(make_small(no), am_active);
+#ifdef USE_VM_PROBES
+    if(DTRACE_ENABLED(scheduler_active)) {
+        DTRACE2(scheduler_active, no, dtrace_ts());
+    }
+#endif
 }
 
 Uint
@@ -2456,6 +2466,11 @@ sched_waiting(Uint no, ErtsRunQueue *rq)
     rq->woken = 0;
     if (!ERTS_RUNQ_IX_IS_DIRTY(rq->ix) && erts_system_profile_flags.scheduler)
 	profile_scheduler(make_small(no), am_inactive);
+#ifdef USE_VM_PROBES
+    if(DTRACE_ENABLED(scheduler_inactive)) {
+        DTRACE2(scheduler_inactive, no, dtrace_ts());
+    }
+#endif
 }
 
 static ERTS_INLINE void
@@ -2468,6 +2483,11 @@ sched_active(Uint no, ErtsRunQueue *rq)
 	rq->waiting--;
     if (!ERTS_RUNQ_IX_IS_DIRTY(rq->ix) && erts_system_profile_flags.scheduler)
 	profile_scheduler(make_small(no), am_active);
+#ifdef USE_VM_PROBES
+    if(DTRACE_ENABLED(scheduler_active)) {
+        DTRACE2(scheduler_active, no, dtrace_ts());
+    }
+#endif
 }
 
 static int ERTS_INLINE
@@ -6582,6 +6602,11 @@ suspend_scheduler(ErtsSchedulerData *esdp)
 
 	if (erts_system_profile_flags.scheduler)
 	    profile_scheduler(make_small(esdp->no), am_inactive);
+#ifdef USE_VM_PROBES
+        if(DTRACE_ENABLED(scheduler_inactive)) {
+            DTRACE2(scheduler_inactive, esdp->no, dtrace_ts());
+        }
+#endif
 
 	sched_wall_time_change(esdp, 0);
 
@@ -6787,6 +6812,12 @@ suspend_scheduler(ErtsSchedulerData *esdp)
     {
 	if (erts_system_profile_flags.scheduler)
 	    profile_scheduler(make_small(esdp->no), am_active);
+
+#ifdef USE_VM_PROBES
+        if(DTRACE_ENABLED(scheduler_active)) {
+            DTRACE2(scheduler_active, esdp->no, dtrace_ts());
+        }
+#endif
 
 	if (!thr_prgr_active) {
 	    erts_thr_progress_active(esdp, thr_prgr_active = 1);
