@@ -900,7 +900,7 @@ enqueue_port(ErtsRunQueue *runq, Port *pp)
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(run_queue_port_enqueue)) {
         DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
-        erts_snprintf(portid, sizeof(portid), "%T", pp->common.id);
+        dtrace_port_str(pp, portid);
         DTRACE3(run_queue_port_enqueue, runq->ix, portid, runq->len);
     }
 #endif
@@ -934,7 +934,7 @@ pop_port(ErtsRunQueue *runq)
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(run_queue_port_dequeue)) {
         DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
-        erts_snprintf(portid, sizeof(portid), "%T", pp->common.id);
+        dtrace_port_str(pp, portid);
         DTRACE3(run_queue_port_dequeue, runq->ix, portid, runq->len);
     }
 #endif
@@ -1579,7 +1579,7 @@ erts_port_task_schedule(Eterm id,
     if (DTRACE_ENABLED(port_active)) {
         if (!(act & ERTS_PTS_FLG_EXEC_IMM)) {
             DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
-            dtrace_port_str(pp, portid);
+            dtrace_port_bin(pp, portid);
             DTRACE2(port_active, portid, dtrace_ts());
         }
     }

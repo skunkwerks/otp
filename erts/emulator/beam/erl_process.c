@@ -5975,15 +5975,15 @@ schedule_out_process(ErtsRunQueue *c_rq, erts_aint32_t state, Process *p, Proces
                 || (a & ERTS_PSFLG_SUSPENDED))) {
             DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
             DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, process_name);
+            dtrace_proc_bin(p, process_name);
             if (ERTS_PROC_IS_EXITING(p)) {
                 strcpy(mfa, "<exiting>");
             } else {
                 BeamInstr *fptr = find_function_from_pc(p->i);
                 if (fptr) {
-                    dtrace_fun_decode(p, (Eterm)fptr[0],
-                                      (Eterm)fptr[1], (Uint)fptr[2],
-                                      NULL, mfa);
+                    dtrace_fun_decode_bin(p, (Eterm)fptr[0],
+                                          (Eterm)fptr[1], (Uint)fptr[2],
+                                          NULL, mfa);
                 } else {
                     erts_snprintf(mfa, sizeof(mfa), "0");
                 }
@@ -6191,13 +6191,13 @@ change_proc_schedule_state(Process *p,
                       || (a & ERTS_PSFLG_SUSPENDED))))) {
             DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
             DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, process_name);
+            dtrace_proc_bin(p, process_name);
             if (ERTS_PROC_IS_EXITING(p)) {
                 strcpy(mfa, "<exiting>");
             } else {
                 BeamInstr *fptr = find_function_from_pc(p->i);
                 if (fptr) {
-                    dtrace_fun_decode(p, (Eterm)fptr[0],
+                    dtrace_fun_decode_bin(p, (Eterm)fptr[0],
                                       (Eterm)fptr[1], (Uint)fptr[2],
                                       NULL, mfa);
                 } else {
@@ -6400,15 +6400,15 @@ suspend_process(Process *c_p, Process *p)
             && (state & ERTS_PSFLG_ACTIVE)) {
             DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
             DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, process_name);
+            dtrace_proc_bin(p, process_name);
             if (ERTS_PROC_IS_EXITING(p)) {
                 strcpy(mfa, "<exiting>");
             } else {
                 BeamInstr *fptr = find_function_from_pc(p->i);
                 if (fptr) {
-                    dtrace_fun_decode(p, (Eterm)fptr[0],
-                                      (Eterm)fptr[1], (Uint)fptr[2],
-                                      NULL, mfa);
+                    dtrace_fun_decode_bin(p, (Eterm)fptr[0],
+                                          (Eterm)fptr[1], (Uint)fptr[2],
+                                          NULL, mfa);
                 } else {
                     erts_snprintf(mfa, sizeof(mfa), "0");
                 }
@@ -9124,13 +9124,13 @@ Process *schedule(Process *p, int calls)
     if (p != NULL && DTRACE_ENABLED(process_unscheduled)) {
         DTRACE_CHARBUF(process_buf, DTRACE_TERM_BUF_SIZE);
         DTRACE_CHARBUF(fun_buf, DTRACE_TERM_BUF_SIZE);
-        dtrace_proc_str(p, process_buf);
+        dtrace_proc_bin(p, process_buf);
         if (ERTS_PROC_IS_EXITING(p)) {
             strcpy(fun_buf, "<exiting>");
         } else {
             BeamInstr *fptr = find_function_from_pc(p->i);
             if (fptr) {
-                dtrace_fun_decode(p, (Eterm)fptr[0],
+                dtrace_fun_decode_bin(p, (Eterm)fptr[0],
                                   (Eterm)fptr[1], (Uint)fptr[2],
                                   NULL, fun_buf);
             } else {
@@ -9211,12 +9211,12 @@ Process *schedule(Process *p, int calls)
 #ifdef USE_VM_PROBES
         if (DTRACE_ENABLED(process_unscheduled_exiting) && !(state & ERTS_PSFLG_FREE)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, pid);
+            dtrace_proc_bin(p, pid);
             DTRACE2(process_unscheduled_exiting, pid, dtrace_ts());
         }
         if (DTRACE_ENABLED(process_unscheduled_exited) && (state & ERTS_PSFLG_FREE)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, pid);
+            dtrace_proc_bin(p, pid);
             DTRACE2(process_unscheduled_exited, pid, dtrace_ts());
         }
 #endif
@@ -9654,7 +9654,7 @@ Process *schedule(Process *p, int calls)
 #ifdef USE_VM_PROBES
         if (DTRACE_ENABLED(process_scheduled_exiting) && (state & ERTS_PSFLG_EXITING)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(p, pid);
+            dtrace_proc_bin(p, pid);
             DTRACE2(process_scheduled_exiting, pid, dtrace_ts());
         }
 #endif
@@ -10939,8 +10939,8 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     if (DTRACE_ENABLED(process_link)) {
         DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
         DTRACE_CHARBUF(link_process_name, DTRACE_TERM_BUF_SIZE);
-        dtrace_proc_str(parent, process_name);
-        dtrace_proc_str(p, link_process_name);
+        dtrace_proc_bin(parent, process_name);
+        dtrace_proc_bin(p, link_process_name);
         DTRACE3(process_link, process_name, link_process_name, dtrace_ts());
     }
 #endif
@@ -11006,13 +11006,13 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(process_spawn)) {
-        DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
-        DTRACE_CHARBUF(parent_name, DTRACE_TERM_BUF_SIZE);
+        DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
+        DTRACE_CHARBUF(ppid, DTRACE_TERM_BUF_SIZE);
         DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
 
-        dtrace_fun_decode(p, mod, func, arity, process_name, mfa);
-        dtrace_proc_str(parent, parent_name);
-        DTRACE4(process_spawn, process_name, parent_name, mfa, dtrace_ts());
+        dtrace_fun_decode_bin(p, mod, func, arity, pid, mfa);
+        dtrace_proc_bin(parent, ppid);
+        DTRACE4(process_spawn, pid, ppid, mfa, dtrace_ts());
     }
 #endif
 
@@ -11965,8 +11965,8 @@ static void doit_exit_link(ErtsLink *lnk, void *vpcontext)
                         DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
                         DTRACE_CHARBUF(unlinked_process_name, 
                                        DTRACE_TERM_BUF_SIZE);
-                        dtrace_proc_str(rp, process_name);
-                        dtrace_pid_str(p->common.id, unlinked_process_name);
+                        dtrace_proc_bin(rp, process_name);
+                        dtrace_proc_bin(p, unlinked_process_name);
                         DTRACE3(process_getting_unlinked, process_name,
                                 unlinked_process_name, dtrace_ts());
                     }
@@ -12045,7 +12045,7 @@ erts_do_exit_process(Process* p, Eterm reason)
         DTRACE_CHARBUF(process_buf, DTRACE_TERM_BUF_SIZE);
         DTRACE_CHARBUF(reason_buf, DTRACE_TERM_BUF_SIZE);
 
-        dtrace_proc_str(p, process_buf);
+        dtrace_proc_bin(p, process_buf);
         erts_snprintf(reason_buf, DTRACE_TERM_BUF_SIZE - 1, "%T", reason);
         DTRACE3(process_exit, process_buf, reason_buf, dtrace_ts());
     }

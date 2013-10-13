@@ -1288,15 +1288,15 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
         if (DTRACE_ENABLED(process_exclusive_inactive)) {
             DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
             DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(c_p, process_name);
+            dtrace_proc_bin(c_p, process_name);
             if (ERTS_PROC_IS_EXITING(c_p)) {
                 strcpy(mfa, "<exiting>");
             } else {
                 BeamInstr *fptr = find_function_from_pc(c_p->i);
                 if (fptr) {
-                    dtrace_fun_decode(c_p, (Eterm)fptr[0],
-                                      (Eterm)fptr[1], (Uint)fptr[2],
-                                      NULL, mfa);
+                    dtrace_fun_decode_bin(c_p, (Eterm)fptr[0],
+                                          (Eterm)fptr[1], (Uint)fptr[2],
+                                          NULL, mfa);
                 } else {
                     erts_snprintf(mfa, sizeof(mfa), "0");
                 }
@@ -1326,7 +1326,7 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(port_active) && !(act & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC))) {
         DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
-        dtrace_port_str(prt, portid);
+        dtrace_port_bin(prt, portid);
         DTRACE2(port_active, portid, dtrace_ts());
     }
 #endif
@@ -1376,7 +1376,7 @@ finalize_imm_drv_call(ErtsTryImmDrvCallState *sp)
     if (DTRACE_ENABLED(port_inactive)
         && !(act & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC))) {
         DTRACE_CHARBUF(portid, DTRACE_TERM_BUF_SIZE);
-        dtrace_port_str(prt, portid);
+        dtrace_port_bin(prt, portid);
         DTRACE2(port_inactive, portid, dtrace_ts());
     }
 #endif
@@ -1409,15 +1409,15 @@ finalize_imm_drv_call(ErtsTryImmDrvCallState *sp)
         if (DTRACE_ENABLED(process_exclusive_active)) {
             DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
             DTRACE_CHARBUF(mfa, DTRACE_TERM_BUF_SIZE);
-            dtrace_proc_str(c_p, process_name);
+            dtrace_proc_bin(c_p, process_name);
             if (ERTS_PROC_IS_EXITING(c_p)) {
                 strcpy(mfa, "<exiting>");
             } else {
                 BeamInstr *fptr = find_function_from_pc(c_p->i);
                 if (fptr) {
-                    dtrace_fun_decode(c_p, (Eterm)fptr[0],
-                                      (Eterm)fptr[1], (Uint)fptr[2],
-                                      NULL, mfa);
+                    dtrace_fun_decode_bin(c_p, (Eterm)fptr[0],
+                                          (Eterm)fptr[1], (Uint)fptr[2],
+                                          NULL, mfa);
                 } else {
                     erts_snprintf(mfa, sizeof(mfa), "0");
                 }
@@ -2752,8 +2752,8 @@ port_link_failure(Eterm port_id, Eterm linker)
                 DTRACE_CHARBUF(process_name, DTRACE_TERM_BUF_SIZE);
                 DTRACE_CHARBUF(unlinked_port_name,
                                DTRACE_TERM_BUF_SIZE);
-                dtrace_proc_str(rp, process_name);
-                dtrace_portid_str(port_id, unlinked_port_name);
+                dtrace_proc_bin(rp, process_name);
+                dtrace_portid_bin(port_id, unlinked_port_name);
                 DTRACE3(port_getting_unlinked, process_name,
                         unlinked_port_name, dtrace_ts());
             }
@@ -3703,10 +3703,10 @@ erts_deliver_port_exit(Port *p, Eterm from, Eterm reason, int send_closed)
    if (DTRACE_ENABLED(port_exit)) {
        DTRACE_CHARBUF(from_str, DTRACE_TERM_BUF_SIZE);
        DTRACE_CHARBUF(port_str, DTRACE_TERM_BUF_SIZE);
-       DTRACE_CHARBUF(rreason_str, 64);
+       DTRACE_CHARBUF(rreason_str, DTRACE_TERM_BUF_SIZE);
 
-       erts_snprintf(from_str, sizeof(DTRACE_CHARBUF_NAME(from_str)), "%T", from);
-       dtrace_port_str(p, port_str);
+       dtrace_term_bin(from, from_str);
+       dtrace_port_bin(p, port_str);
        erts_snprintf(rreason_str, sizeof(DTRACE_CHARBUF_NAME(rreason_str)), "%T", rreason);
        DTRACE5(port_exit, from_str, port_str, p->name, rreason_str, dtrace_ts());
    }
