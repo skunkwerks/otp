@@ -9137,7 +9137,13 @@ Process *schedule(Process *p, int calls)
                 erts_snprintf(fun_buf, sizeof(fun_buf), "0");
             }
         }
-        DTRACE3(process_unscheduled, process_buf, fun_buf, dtrace_ts());
+#ifdef ERTS_SMP
+        Uint sched_id = p->scheduler_data->no;
+#else
+        Uint sched_id = 1;
+#endif
+        DTRACE4(process_unscheduled, process_buf, fun_buf, sched_id, 
+                dtrace_ts());
     }
 #endif
 
@@ -9212,12 +9218,22 @@ Process *schedule(Process *p, int calls)
         if (DTRACE_ENABLED(process_unscheduled_exiting) && !(state & ERTS_PSFLG_FREE)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
             dtrace_proc_bin(p, pid);
-            DTRACE2(process_unscheduled_exiting, pid, dtrace_ts());
+#ifdef ERTS_SMP
+            Uint sched_id = p->scheduler_data->no;
+#else
+            Uint sched_id = 1;
+#endif
+            DTRACE3(process_unscheduled_exiting, pid, sched_id, dtrace_ts());
         }
         if (DTRACE_ENABLED(process_unscheduled_exited) && (state & ERTS_PSFLG_FREE)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
             dtrace_proc_bin(p, pid);
-            DTRACE2(process_unscheduled_exited, pid, dtrace_ts());
+#ifdef ERTS_SMP
+            Uint sched_id = p->scheduler_data->no;
+#else
+            Uint sched_id = 1;
+#endif
+            DTRACE3(process_unscheduled_exited, pid, sched_id, dtrace_ts());
         }
 #endif
 
@@ -9655,7 +9671,12 @@ Process *schedule(Process *p, int calls)
         if (DTRACE_ENABLED(process_scheduled_exiting) && (state & ERTS_PSFLG_EXITING)) {
             DTRACE_CHARBUF(pid, DTRACE_TERM_BUF_SIZE);
             dtrace_proc_bin(p, pid);
-            DTRACE2(process_scheduled_exiting, pid, dtrace_ts());
+#ifdef ERTS_SMP
+            Uint sched_id = p->scheduler_data->no;
+#else
+            Uint sched_id = 1;
+#endif
+            DTRACE3(process_scheduled_exiting, pid, sched_id, dtrace_ts());
         }
 #endif
 
