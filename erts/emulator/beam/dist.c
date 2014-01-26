@@ -844,7 +844,7 @@ erts_dsig_send_msg(ErtsDSigData *dsdp, Eterm remote, Eterm message)
     Sint tok_lastcnt = 0;
     Sint tok_serial = 0;
     Uint msize = 0;
-    DTRACE_CHARBUF(node_name, DTRACE_TERM_BUF_SIZE);
+    DTRACE_CHARBUF(node_name, 64);
     DTRACE_CHARBUF(sender_name, DTRACE_TERM_BUF_SIZE);
     DTRACE_CHARBUF(receiver_name, DTRACE_TERM_BUF_SIZE);
     DTRACE_CHARBUF(sender_pid, DTRACE_TERM_BUF_SIZE);
@@ -908,7 +908,7 @@ erts_dsig_send_reg_msg(ErtsDSigData *dsdp, Eterm remote_name, Eterm message)
     Sint tok_lastcnt = 0;
     Sint tok_serial = 0;
     Uint32 msize = 0;
-    DTRACE_CHARBUF(node_name, DTRACE_TERM_BUF_SIZE);
+    DTRACE_CHARBUF(node_name, 64);
     DTRACE_CHARBUF(sender_name, DTRACE_TERM_BUF_SIZE);
     DTRACE_CHARBUF(receiver_name, DTRACE_TERM_BUF_SIZE);
     DTRACE_CHARBUF(sender_pid, DTRACE_TERM_BUF_SIZE);
