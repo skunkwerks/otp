@@ -2817,7 +2817,8 @@ random_sleep(Times) ->
     case get(random_seed) of
 	undefined ->
 	    {A1, A2, A3} = now(),
-	    random:seed(A1, A2, A3 + erlang:phash(node(), 100000));
+	    _ = random:seed(A1, A2, A3 + erlang:phash(node(), 100000)),
+	    ok;
 	_ -> ok
     end,
     %% First time 1/4 seconds, then doubling each time up to 8 seconds max.
