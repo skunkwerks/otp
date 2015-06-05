@@ -119,8 +119,7 @@ init_send({node, Node, Name, SGroupName, Msg, From}) ->
 -spec init_whereis(_) -> no_return().
 init_whereis({any, NodesList, Name, SGroupName, From}) ->
     R = whereis_any_loop(NodesList, {Name, SGroupName}),
-    gen_server:cast(s_group, {find_name_res, R, self(), From}),
-    end_loop();
+    gen_server:cast(s_group, {find_name_res, R, self(), From});
 init_whereis({group, Nodes, Name, SGroupName, From}) ->
     case whereis_group_loop(Nodes, {Name, SGroupName}) of
 	group_down ->
