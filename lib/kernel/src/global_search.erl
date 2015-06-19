@@ -149,16 +149,14 @@ init_names({s_group, SGroupName, Nodes, From}) ->
 	    gen_server:cast(s_group, {registered_names_res, SGroupName, [], self(), From});
 	R ->
 	    gen_server:cast(s_group, {registered_names_res, SGroupName, R, self(), From})
-    end,
-    end_loop();
+    end;
 init_names({node, Node, From}) ->
     case names_check_node(Node) of
 	node_down ->
 	    gen_server:cast(s_group, {registered_names_res, undefined, [], self(), From});
 	R ->
 	    gen_server:cast(s_group, {registered_names_res, undefined, R, self(), From})
-    end,
-    end_loop().
+    end.
 
 %%%====================================================================================
 %%% Wait for the kill message.
