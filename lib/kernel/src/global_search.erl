@@ -77,8 +77,7 @@ init_send({any, NodesList, Name, SGroupName, Msg, From}) ->
 	    gen_server:cast(s_group, {send_res, Res, Name, SGroupName, Msg, self(), From});
 	Pid ->
 	    gen_server:cast(s_group, {send_res, Pid, Name, SGroupName, Msg, self(), From})
-    end,
-    end_loop();
+    end;
 init_send({group, Nodes, Name, SGroupName, Msg, From}) ->
     case whereis_group_loop(Nodes, {Name, SGroupName}) of
 	group_down ->
@@ -89,8 +88,7 @@ init_send({group, Nodes, Name, SGroupName, Msg, From}) ->
 	    gen_server:cast(s_group, {send_res, Res, Name, SGroupName, Msg, self(), From});
 	Pid ->
 	    gen_server:cast(s_group, {send_res, Pid, Name, SGroupName, Msg, self(), From})
-    end,
-    end_loop();
+    end;
 init_send({node, Node, Name, SGroupName, Msg, From}) ->
     case whereis_check_node(Node, {Name, SGroupName}) of
 	node_down ->
@@ -101,8 +99,7 @@ init_send({node, Node, Name, SGroupName, Msg, From}) ->
 	    gen_server:cast(s_group, {send_res, Res, Name, SGroupName, Msg, self(), From});
 	Pid ->
 	    gen_server:cast(s_group, {send_res, Pid, Name, SGroupName, Msg, self(), From})
-    end,
-    end_loop().
+    end.
 
 
 %%%====================================================================================
@@ -126,16 +123,14 @@ init_whereis({group, Nodes, Name, SGroupName, From}) ->
 	    gen_server:cast(s_group, {find_name_res, undefined, self(), From});
 	R ->
 	    gen_server:cast(s_group, {find_name_res, R, self(), From})
-    end,
-    end_loop();
+    end;
 init_whereis({node, Node, Name, SGroupName, From}) ->
     case whereis_check_node(Node, {Name, SGroupName}) of
 	node_down ->
 	    gen_server:cast(s_group, {find_name_res, undefined, self(), From});
 	R ->
 	    gen_server:cast(s_group, {find_name_res, R, self(), From})
-    end,
-    end_loop().
+    end.
 
 
 %%%====================================================================================
