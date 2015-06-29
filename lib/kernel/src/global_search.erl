@@ -161,14 +161,14 @@ init_names({node, Node, From}) ->
 %%%====================================================================================
 %%% Wait for the kill message.
 %%%====================================================================================
-
--spec end_loop() -> no_return().
-
-end_loop() ->
-    receive
-	kill ->
-	    exit(normal)
-    end.
+%
+%-spec end_loop() -> no_return().
+%
+%end_loop() ->
+%    receive
+%	kill ->
+%	    exit(normal)
+%    end.
 
 %%%====================================================================================
 %%% Search for the globally registered name in the whole known world.
