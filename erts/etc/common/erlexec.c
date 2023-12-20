@@ -20,6 +20,14 @@
 
 #include "etc_common.h"
 
+#if defined(RUN_FROM_EMU)
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include "global.h"
+#endif
+
 #include "erl_driver.h"
 #include "erl_misc_utils.h"
 
@@ -225,6 +233,9 @@ int start_emulator(char* emu, char*start_prog, char** argv, int start_detached);
 #endif
 
 
+#if defined(RUN_FROM_EMU)
+int erlexec_main(int argc, char **argv);
+#endif
 
 /*
  * Variables.
@@ -416,6 +427,75 @@ static void add_boot_config(void)
 
 #ifdef __WIN32__
 __declspec(dllexport) int win_erlexec(int argc, char **argv, HANDLE module)
+#ifdef RUN_FROM_EMU
+static char *process_nodename(char *namearg)
+{
+    int fd, waiting = 0;
+    char *hostname;
+    struct ifreq ifr;
+
+    hostname = strchr(namearg, '@');
+    if (!hostname)
+        return namearg;
+    hostname++;
+    if (hostname[0] != '%')
+        return namearg;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        fprintf(stderr, "%s: unable to open socket: %s\n", __func__, strerror(errno));
+        return namearg;
+    }
+
+    do {
+        struct sockaddr_in *sin;
+        ifr.ifr_addr.sa_family = AF_INET;
+        strncpy(ifr.ifr_name, hostname + 1, IFNAMSIZ-1);
+        if (ioctl(fd, SIOCGIFADDR, &ifr) < 0) {
+            fprintf(stderr, "%s: ioctl for SIOCGIFADDR failed: %s\n", __func__, strerror(errno));
+            close(fd);
+            return namearg;
+        }
+        sin = (struct sockaddr_in *)&ifr.ifr_addr;
+        if (sin->sin_addr.s_addr != 0) {
+            int sname_len = hostname - namearg;
+            int addr_len, total;
+            char *addr;
+            char *newnode;
+
+            if (waiting)
+                fprintf(stderr, "\n");
+            close(fd);
+            addr = inet_ntoa(sin->sin_addr);
+            addr_len = strlen(addr);
+            total = sname_len + addr_len + 1;
+            newnode = malloc(total);
+            if (!newnode) {
+                fprintf(stderr, "%s: unable to allocate %d bytes for node name\n", __func__, total);
+                return namearg;
+            }
+            strncpy(newnode, namearg, sname_len);
+            strncpy(newnode + sname_len, addr, addr_len + 1);
+            newnode[total - 1] = '\0';
+            fprintf(stderr, "%s: node name is \"%s\"\n", progname, newnode);
+            return newnode;
+        }
+        if (!waiting) {
+            waiting = 1;
+            fprintf(stderr, "%s: waiting for address assignment for interface \"%s\"...\n",
+                    progname, hostname + 1);
+        } else {
+            fprintf(stderr, ".");
+        }
+        sleep(1);
+    } while (1);
+}
+#endif
+
+#ifdef __WIN32__
+__declspec(dllexport) int win_erlexec(int argc, char **argv, HANDLE module, int windowed)
+#elif defined(RUN_FROM_EMU)
+int erlexec_main(int argc, char **argv)
 #else
 int main(int argc, char **argv)
 #endif
@@ -465,6 +545,21 @@ int main(int argc, char **argv)
         SetStdHandle(STD_ERROR_HANDLE,
                      CreateFile("nul", GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
                                 FILE_ATTRIBUTE_NORMAL, NULL));
+	goto skip_arg_massage;
+    }
+    free_env_val(s);
+#elif !defined(RUN_FROM_EMU)
+    int reset_cerl_detached = 0;
+
+    s = get_env("CERL_DETACHED_PROG");
+    if (s && strcmp(s, "") != 0) {
+	emu = s;
+	start_detached = 1;
+	reset_cerl_detached = 1;
+	ensure_EargsSz(argc + 1);
+	memcpy((void *) Eargsp, (void *) argv, argc * sizeof(char *));
+	Eargsp[argc] = emu;
+	Eargsp[argc] = NULL;
 	goto skip_arg_massage;
     }
     free_env_val(s);
@@ -717,16 +812,6 @@ int main(int argc, char **argv)
 			add_Eargs("-B");
 			haltAfterwards = 1;
 			i = argc; /* Skip rest of command line */
-		    } else if (strcmp(argv[i], "-man") == 0) {
-#if defined(__WIN32__)
-			error("-man not supported on Windows");
-#else
-			argv[i] = "man";
-			erts_snprintf(tmpStr, sizeof(tmpStr), "%s/man", rootdir);
-			set_env("MANPATH", tmpStr);
-			execvp("man", argv+i);
-			error("Could not execute the 'man' command.");
-#endif
 		    } else
 			add_arg(argv[i]);
 		    break;
@@ -741,7 +826,11 @@ int main(int argc, char **argv)
 			 */
 
 			add_arg(argv[i]);
+#ifdef RUN_FROM_EMU
+			add_arg(process_nodename(argv[i+1]));
+#else
 			add_arg(argv[i+1]);
+#endif
 			isdistributed = 1;
 			i++;
 		    } else if (strcmp(argv[i], "-noinput") == 0) {
@@ -1147,6 +1236,11 @@ int main(int argc, char **argv)
 
 #else
 
+#if defined(RUN_FROM_EMU)
+    erl_start(EargsCnt, Eargsp);
+    return 0;
+#else
+ skip_arg_massage:
     if (start_detached) {
 	int status = fork();
 	if (status != 0)	/* Parent */
@@ -1225,6 +1319,7 @@ int main(int argc, char **argv)
     }
     return 1;
 #endif
+#endif
 }
 
 
@@ -1276,9 +1371,31 @@ usage_format(char *format, ...)
     usage_aux();
 }
 
+#if defined(RUN_FROM_EMU)
+static void *epmd_thread(void *arg)
+{
+    extern int epmd(int argc, char **argv);
+    char *argv[] = {
+            "epmd"
+    };
+    epmd(1, argv);
+    return NULL;
+}
+#endif
+
 void
 start_epmd_daemon(char *epmd)
 {
+#if defined(RUN_FROM_EMU)
+    pthread_t thread;
+    int result;
+
+    result = pthread_create(&thread, NULL, epmd_thread, NULL);
+    if (result) {
+      fprintf(stderr, "Error spawning epmd (error %d)\n", result);
+      exit(1);
+    }
+#else
     char  epmd_cmd[MAXPATHLEN+100];
 #ifdef __WIN32__
     char* arg1 = NULL;
@@ -1321,6 +1438,7 @@ start_epmd_daemon(char *epmd)
       fprintf(stderr, "Error spawning %s (error %d)\n", epmd_cmd,errno);
       exit(1);
     }
+#endif
 }
 
 static void

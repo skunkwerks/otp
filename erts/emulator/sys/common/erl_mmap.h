@@ -40,9 +40,6 @@
 #if HAVE_MMAP
 #  define ERTS_HAVE_OS_MMAP 1
 #  define ERTS_HAVE_GENUINE_OS_MMAP 1
-#  if HAVE_MREMAP
-#    define ERTS_HAVE_OS_MREMAP 1
-#  endif
 /*
  * MAP_NORESERVE is undefined in FreeBSD 10.x and later.
  * This is to enable 64bit HiPE experimentally on FreeBSD.

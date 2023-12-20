@@ -367,6 +367,9 @@ ifeq ($(TARGET),win32)
 LIBS    += -L$(ERL_TOP)/erts/emulator/pcre/obj/$(TARGET)/$(TYPE) -lepcre
 else
 LIBS    += $(ERL_TOP)/erts/emulator/pcre/obj/$(TARGET)/$(TYPE)/$(LIB_PREFIX)epcre$(LIB_SUFFIX)
+ERLEXEC_DIR = $(ERL_TOP)/erts/etc/common
+EPMD_DIR = $(ERL_TOP)/erts/epmd
+include $(EPMD_DIR)/epmd.mk
 endif
 
 EPCRE_LIB = $(ERL_TOP)/erts/emulator/pcre/obj/$(TARGET)/$(TYPE)/$(LIB_PREFIX)epcre$(LIB_SUFFIX)
@@ -820,6 +823,17 @@ $(OBJDIR)/dll_sys.o: sys/$(ERLANG_OSTYPE)/sys.c
 $(PRELOAD_OBJ): $(PRELOAD_SRC)
 	$(V_RC) -o $@  -I$(ERL_TOP)/erts/etc/win32 $(PRELOAD_SRC)
 
+else
+
+$(OBJDIR)/erlexec.o: $(ERLEXEC_DIR)/erlexec.c
+	$(V_CC) $(CFLAGS) -DRUN_FROM_EMU -DOTP_SYSTEM_VERSION=\"$(SYSTEM_VSN)\" $(INCLUDES) -c $< -o $@
+$(OBJDIR)/epmd.o: $(EPMD_DIR)/src/epmd.c
+	$(V_CC) $(CFLAGS) -DDONT_USE_MAIN -DEPMD_PORT_NO=$(EPMD_PORT_NO) $(INCLUDES) -c $< -o $@
+$(OBJDIR)/epmd_cli.o: $(EPMD_DIR)/src/epmd_cli.c
+	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+$(OBJDIR)/epmd_srv.o: $(EPMD_DIR)/src/epmd_srv.c
+	$(V_CC) $(CFLAGS) -DDONT_USE_MAIN $(INCLUDES) -c $< -o $@
+
 endif
 
 # We disable the implicit rule of .S -> .o so that the verbose asm
@@ -1163,6 +1177,11 @@ OS_OBJS = \
 
 else
 OS_OBJS = \
+	$(OBJDIR)/erlexec.o \
+	$(OBJDIR)/erl_child_setup_thread.o \
+	$(OBJDIR)/epmd.o \
+	$(OBJDIR)/epmd_cli.o \
+	$(OBJDIR)/epmd_srv.o \
 	$(OBJDIR)/sys.o \
 	$(OBJDIR)/sys_drivers.o \
 	$(OBJDIR)/sys_env.o \

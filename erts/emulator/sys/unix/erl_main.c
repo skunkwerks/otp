@@ -30,6 +30,17 @@ main(int argc, char **argv)
     /* Must be done before we have a chance to spawn any scheduler threads. */
     sys_init_signal_stack();
 
+    char *prog_name = rindex(argv[0], '/');
+
+    if (prog_name)
+        prog_name++;
+    else
+        prog_name = argv[0];
+    if (!strcmp(prog_name, "erlexec")) {
+        extern int erlexec_main(int argc, char **argv);
+
+        return erlexec_main(argc, argv);
+    }
     erl_start(argc, argv);
     return 0;
 }

@@ -698,6 +698,8 @@ for file in "$@"; do
     }
 done
 
+mv $erlang_bindir/../erts-11.0/bin/beam.smp $erlang_bindir/../erts-11.0/bin/erlexec
+
 test "$tst" = "" || echo "{ok,{$paths,\"$iprfx$bindir\",\"$src_dir\"}}." > $tst
 
 exit 0 # Done
